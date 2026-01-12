@@ -1,0 +1,49 @@
+{
+    "users": [
+        {
+            "username": "maryam9790",
+            "logonId": "9790",
+            "password": "ODB8NjR8MTE1fDExNXwxMTl8NDh8MTE0fDEwMHw=",
+            "branchCode": "00700",
+            "template": "TlQAEOgLAAAKAU5GVBDeCwAACgFORlIl1AsZAAFoAfwB..."
+        },
+        {
+            "username": "testuser01",
+            "logonId": "1001",
+            "password": "ODB8NjR8MTE1fDExNXwxMTl8NDh8MTE0fDEwMHw=",
+            "branchCode": "00700",
+            "template": "TlQAEOgLAAAKAU5GVBDeCwAACgFORlIl1AsZAAFoAfwB..."
+        },
+        {
+            "username": "testuser02",
+            "logonId": "1002",
+            "password": "ODB8NjR8MTE1fDExNXwxMTl8NDh8MTE0fDEwMHw=",
+            "branchCode": "00700",
+            "template": "TlQAEOgLAAAKAU5GVBDeCwAACgFORlIl1AsZAAFoAfwB..."
+        },
+        {
+            "username": "testuser03",
+            "logonId": "1003",
+            "password": "ODB8NjR8MTE1fDExNXwxMTl8NDh8MTE0fDEwMHw=",
+            "branchCode": "00700",
+            "template": "TlQAEOgLAAAKAU5GVBDeCwAACgFORlIl1AsZAAFoAfwB..."
+        },
+        {
+            "username": "testuser04",
+            "logonId": "1004",
+            "password": "ODB8NjR8MTE1fDExNXwxMTl8NDh8MTE0fDEwMHw=",
+            "branchCode": "00700",
+            "template": "TlQAEOgLAAAKAU5GVBDeCwAACgFORlIl1AsZAAFoAfwB..."
+        }
+    ],
+    "metadata": {
+        "description": "Test users for FSMGMT load testing",
+        "totalUsers": 5,
+        "lastUpdated": "2026-01-06",
+        "notes": [
+            "Password adalah base64 encoded",
+            "Template adalah fingerprint template (truncated)",
+            "Tambahkan lebih banyak users untuk test dengan scale besar"
+        ]
+    }
+}

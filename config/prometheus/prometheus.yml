@@ -1,0 +1,114 @@
+global:
+  scrape_interval: 15s
+  evaluation_interval: 15s
+
+rule_files:
+  - "alert.rules.yml"
+
+scrape_configs:
+  - job_name: 'prometheus'
+    static_configs:
+      - targets: ['localhost:9090']
+
+  - job_name: 'node-exporter'
+    static_configs:
+      - targets: ['node-exporter:9100']
+
+  # Blackbox Exporter - Webservers (Auth required)
+  - job_name: 'blackbox-webservers'
+    metrics_path: /probe
+    params:
+      module: [http_webserver_auth]
+    static_configs:
+      - targets:
+        - http://webserver-primary:8083/finger/license
+        - http://webserver-secondary:8090/finger/license
+    relabel_configs:
+      - source_labels: [__address__]
+        target_label: __param_target
+      - source_labels: [__param_target]
+        regex: "https?://([^/:]+).*"
+        target_label: instance
+        replacement: "${1}"
+      - target_label: __address__
+        replacement: blackbox-exporter:9115
+
+  # Blackbox Exporter - Load Balancer (Auth required)
+  - job_name: 'blackbox-lb'
+    metrics_path: /probe
+    params:
+      module: [http_lb_auth]
+    static_configs:
+      - targets:
+        - http://loadbalancer/k6/finger/license
+    relabel_configs:
+      - source_labels: [__address__]
+        target_label: __param_target
+      - source_labels: [__param_target]
+        regex: "https?://([^/:]+).*"
+        target_label: instance
+        replacement: "${1}"
+      - target_label: __address__
+        replacement: blackbox-exporter:9115
+
+  - job_name: 'mssql-exporter'
+    static_configs:
+      - targets: ['mssql-exporter:4000']
+
+  # ============================================
+  # WEB SERVER PRIMARY (192.168.5.70) - WINDOWS
+  # ============================================
+  
+  # Windows System Metrics (CPU, RAM, Disk, Network, Process, Thread)
+  - job_name: 'webserver-primary-windows'
+    static_configs:
+      - targets: ['192.168.5.70:9182']
+        labels:
+          server: 'webserver-primary'
+          ip: '192.168.5.70'
+          role: 'primary'
+          os: 'windows'
+          component: 'system'
+    scrape_interval: 10s
+    scrape_timeout: 5s
+
+  # Application Metrics (Request count, Active users)
+  - job_name: 'webserver-primary-app'
+    static_configs:
+      - targets: ['192.168.5.70:8083']
+        labels:
+          server: 'webserver-primary'
+          ip: '192.168.5.70'
+          role: 'primary'
+          component: 'application'
+    metrics_path: '/metrics'
+    scrape_interval: 10s
+
+  # ============================================
+  # WEB SERVER SECONDARY (192.168.5.67) - WINDOWS
+  # ============================================
+  
+  # Windows System Metrics
+  - job_name: 'webserver-secondary-windows'
+    static_configs:
+      - targets: ['192.168.5.67:9182']
+        labels:
+          server: 'webserver-secondary'
+          ip: '192.168.5.67'
+          role: 'secondary'
+          os: 'windows'
+          component: 'system'
+    scrape_interval: 10s
+    scrape_timeout: 5s
+
+  # Application Metrics
+  - job_name: 'webserver-secondary-app'
+    static_configs:
+      - targets: ['192.168.5.67:8090']
+        labels:
+          server: 'webserver-secondary'
+          ip: '192.168.5.67'
+          role: 'secondary'
+          component: 'application'
+    metrics_path: '/metrics'
+    scrape_interval: 10s

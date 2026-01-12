@@ -1,0 +1,181 @@
+services:
+  # ============================================
+  # Time-Series Databases
+  # ============================================
+
+  # InfluxDB - untuk K6 load test metrics
+  influxdb:
+    image: influxdb:1.8
+    container_name: influxdb
+    ports:
+      - "8086:8086"
+    environment:
+      - INFLUXDB_DB=k6
+    volumes:
+      - ./storage/influxdb:/var/lib/influxdb
+    networks:
+      - k6-net
+    healthcheck:
+      test: [ "CMD", "curl", "-sL", "-I", "http://localhost:8086/ping" ]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+  # Prometheus - untuk system & application metrics
+  prometheus:
+    image: prom/prometheus:latest
+    container_name: prometheus
+    ports:
+      - "9090:9090"
+    command:
+      - '--config.file=/etc/prometheus/prometheus.yml'
+      - '--storage.tsdb.path=/prometheus'
+      - '--storage.tsdb.retention.time=30d'
+      - '--web.enable-lifecycle'
+    volumes:
+      - ./config/prometheus/prometheus.yml:/etc/prometheus/prometheus.yml:ro
+      - ./config/prometheus/alert.rules.yml:/etc/prometheus/alert.rules.yml:ro
+      - ./storage/prometheus:/prometheus
+    networks:
+      - k6-net
+    restart: unless-stopped
+    extra_hosts:
+      - "loadbalancer:192.168.5.68"
+      - "webserver-primary:192.168.5.70"
+      - "webserver-secondary:192.168.5.67"
+    healthcheck:
+      test: [ "CMD", "wget", "-q", "--spider", "http://localhost:9090/-/healthy" ]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+  # ============================================
+  # Visualization - Grafana
+  # ============================================
+
+  grafana:
+    image: grafana/grafana:latest
+    container_name: grafana
+    ports:
+      - "3000:3000"
+    environment:
+      - GF_AUTH_ANONYMOUS_ORG_ROLE=Admin
+      - GF_AUTH_ANONYMOUS_ENABLED=true
+      - GF_AUTH_BASIC_ENABLED=false
+      - GF_INSTALL_PLUGINS=grafana-clock-panel,grafana-simple-json-datasource,grafana-piechart-panel
+    volumes:
+      - ./storage/grafana:/var/lib/grafana
+      - ./config/grafana/provisioning:/etc/grafana/provisioning
+      - ./logs/grafana:/var/log/grafana
+    depends_on:
+      - influxdb
+      - prometheus
+    networks:
+      - k6-net
+    restart: unless-stopped
+    healthcheck:
+      test: [ "CMD-SHELL", "curl -f http://localhost:3000/api/health || exit 1" ]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+  # ============================================
+  # Exporters - Metrics Collection
+  # ============================================
+
+  # Node Exporter - Monitor THIS server (192.168.5.11)
+  node-exporter:
+    image: prom/node-exporter:latest
+    container_name: node-exporter
+    command:
+      - '--path.procfs=/host/proc'
+      - '--path.sysfs=/host/sys'
+      - '--path.rootfs=/rootfs'
+      - '--collector.filesystem.mount-points-exclude=^/(sys|proc|dev|host|etc)($$|/)'
+    ports:
+      - "9100:9100"
+    volumes:
+      - /proc:/host/proc:ro
+      - /sys:/host/sys:ro
+      - /:/rootfs:ro
+    networks:
+      - k6-net
+    restart: unless-stopped
+    healthcheck:
+      test: [ "CMD", "wget", "-q", "--spider", "http://localhost:9100/metrics" ]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+  # Blackbox Exporter - Monitor Remote HTTP Endpoints
+  blackbox-exporter:
+    image: prom/blackbox-exporter:latest
+    container_name: blackbox-exporter
+    ports:
+      - "9115:9115"
+    volumes:
+      - ./config/blackbox/blackbox.yml:/etc/blackbox_exporter/config.yml:ro
+    command:
+      - '--config.file=/etc/blackbox_exporter/config.yml'
+    networks:
+      - k6-net
+    restart: unless-stopped
+    extra_hosts:
+      - "loadbalancer:192.168.5.68"
+      - "webserver-primary:192.168.5.70"
+      - "webserver-secondary:192.168.5.67"
+    healthcheck:
+      test: [ "CMD", "wget", "-q", "--spider", "http://localhost:9115/health" ]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+  # SQL Server Exporter - Monitor Database Server
+  mssql-exporter:
+    image: awaragi/prometheus-mssql-exporter:latest
+    container_name: mssql-exporter
+    ports:
+      - "4000:4000"
+    environment:
+      - SERVER=${MSSQL_HOST}
+      - PORT=${MSSQL_PORT:-1433}
+      - USERNAME=${MSSQL_USER:-sa}
+      - PASSWORD=${MSSQL_PASSWORD}
+      - ENCRYPT=disable
+      - GATHER_INTERVAL=15s
+    networks:
+      - k6-net
+    restart: unless-stopped
+    healthcheck:
+      test: [ "CMD", "wget", "-q", "--spider", "http://localhost:4000/metrics" ]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+  k6:
+    image: grafana/k6:latest
+    container_name: k6
+    ports:
+      - "6565:6565"
+    environment:
+      - K6_OUT=influxdb=http://influxdb:8086/k6
+    volumes:
+      - ./scripts:/scripts
+      - ./config:/config
+      - ./data:/data
+      - ./reports:/reports
+    command: [ "run", "--quiet" ]
+    networks:
+      - k6-net
+
+networks:
+  k6-net:
+    driver: bridge
+
+volumes:
+  influxdb-data:
+    name: influxdb-k6-data
+  grafana-data:
+    name: grafana-k6-data
+  prometheus-data:
+    name: prometheus-data
