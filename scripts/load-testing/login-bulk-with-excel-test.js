@@ -52,7 +52,7 @@ export const options = {
     scenarios: {
         concurrent_login: {
             executor: 'per-vu-iterations',
-            vus: 3,
+            vus: 4,
             iterations: 1,
             maxDuration: '30s',
         },
@@ -129,9 +129,9 @@ export default function main() {
     console.log(`login [${userData.LogonID}] → HTTP ${response.status}`)
     if (response.status !== 200) {
         console.log(`login [${userData.LogonID}] FAILED body: ${response.body}`)
-    }
 
-    sleep(1)
+        return response;
+    }
 
     // ========== 3. DASHBOARD ==========
     const dashboardPayload = {
@@ -152,6 +152,8 @@ export default function main() {
     console.log(`dashboard [${userData.LogonID}] → HTTP ${response.status}`)
     if (response.status !== 200) {
         console.log(`dashboard [${userData.LogonID}] FAILED body: ${response.body}`)
+
+        return response;
     }
 
     sleep(2)
