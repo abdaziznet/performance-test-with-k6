@@ -40,65 +40,18 @@ const testData = new SharedArray('users', function () {
     }));
 });
 
-// export const options = {
-//     scenarios: {
-//         peak_wib_load: {
-//             executor: 'per-vu-iterations',
-//             vus: 18,
-//             iterations: 3,
-//             maxDuration: '30s',
-//         },
-//     },
-// }
-
-// export const options = {
-//     scenarios: {
-//         banking_load_test: {
-//             executor: 'ramping-vus',
-//             startVUs: 0,
-//             stages: [
-//                 { duration: '30s', target: 10 },   // warm-up
-//                 { duration: '1m', target: 100 }, // normal load
-//                 { duration: '2m', target: 100 }, // steady state (observasi)
-//                 { duration: '15s', target: 0 },    // ramp-down
-//             ],
-//             gracefulRampDown: '30s',
-//         },
-//     },
-
-//     thresholds: {
-//         http_req_duration: ['p(95)<=1000'], // response time <= 1 detik
-//         http_req_failed: ['rate<0.01'],     // error rate < 1%
-//     },
-// };
 
 export const options = {
     scenarios: {
-        load_test_normal: {
-            executor: 'ramping-vus',
-            startVUs: 0,
-            stages: [
-                { duration: '1m', target: 20 },   // warm-up
-                { duration: '2m', target: 30 },  // normal load
-                { duration: '5m', target: 30 },  // steady state
-                { duration: '1m', target: 0 },    // ramp-down
-            ],
-            gracefulRampDown: '30s',
+        spike_test: {
+            executor: 'constant-vus',
+            vus: 1000,
+            duration: '1m', // Gempur selama 1 menit
         },
     },
-
     thresholds: {
-        // 1. Response Time
-        http_req_duration: ['p(95)<=1000'],
-
-        // 2. Error Rate
-        http_req_failed: ['rate==0'],
-
-        // 3. Throughput
-        http_reqs: ['rate>=100'],
-
-        // 7. Network Latency
-        http_req_waiting: ['p(95)<=100'],
+        http_req_duration: ['p(95)<=1000'], // response time <= 1 detik
+        http_req_failed: ['rate<0.01'],     // error rate < 1%
     },
 };
 

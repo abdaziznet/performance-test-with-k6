@@ -55,6 +55,18 @@ scrape_configs:
     static_configs:
       - targets: ['mssql-exporter:4000']
 
+  # Windows System Metrics (CPU, RAM, Disk, Network, Process, Thread)
+  #- job_name: 'windows'
+  #  scrape_interval: 30s
+  #  scrape_timeout: 10s
+  #  static_configs:
+  #    - targets:
+  #      - '192.168.5.70:9182'
+  #      - '192.168.5.67:9182'  # Server kedua
+  #      labels:
+  #        environment: 'sit'
+
+
   # ============================================
   # WEB SERVER PRIMARY (192.168.5.70) - WINDOWS
   # ============================================
@@ -73,16 +85,16 @@ scrape_configs:
     scrape_timeout: 5s
 
   # Application Metrics (Request count, Active users)
-  - job_name: 'webserver-primary-app'
-    static_configs:
-      - targets: ['192.168.5.70:8083']
-        labels:
-          server: 'webserver-primary'
-          ip: '192.168.5.70'
-          role: 'primary'
-          component: 'application'
-    metrics_path: '/metrics'
-    scrape_interval: 10s
+  #- job_name: 'webserver-primary-app'
+  #  static_configs:
+  #    - targets: ['192.168.5.70:8083']
+  #      labels:
+  #        server: 'webserver-primary'
+  #        ip: '192.168.5.70'
+  #        role: 'primary'
+  #        component: 'application'
+  #  metrics_path: '/metrics'
+  #  scrape_interval: 10s
 
   # ============================================
   # WEB SERVER SECONDARY (192.168.5.67) - WINDOWS
@@ -102,13 +114,13 @@ scrape_configs:
     scrape_timeout: 5s
 
   # Application Metrics
-  - job_name: 'webserver-secondary-app'
-    static_configs:
-      - targets: ['192.168.5.67:8090']
-        labels:
-          server: 'webserver-secondary'
-          ip: '192.168.5.67'
-          role: 'secondary'
-          component: 'application'
-    metrics_path: '/metrics'
-    scrape_interval: 10s
+  #- job_name: 'webserver-secondary-app'
+  #  static_configs:
+  #    - targets: ['192.168.5.67:8090']
+  #      labels:
+  #        server: 'webserver-secondary'
+  #        ip: '192.168.5.67'
+  #        role: 'secondary'
+  #        component: 'application'
+  #  metrics_path: '/metrics'
+  #  scrape_interval: 10s
